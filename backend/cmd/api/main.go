@@ -22,11 +22,11 @@ func main() {
 	}
 	defer sqlDB.Close()
 
-	expenseRepo := repository.NewExpenseRepository(sqlDB)
-	expenseService := service.NewExpenseService(expenseRepo)
-	expenseHandler := handler.NewExpenseHandler(expenseService)
+	transactionRepo := repository.NewTransactionRepository(sqlDB)
+	transactionService := service.NewTransactionService(transactionRepo)
+	transactionHandler := handler.NewTransactionHandler(transactionService)
 
-	engine := router.New(cfg, expenseHandler, sqlDB)
+	engine := router.New(cfg, transactionHandler, sqlDB)
 
 	srv := &http.Server{
 		Addr:         ":" + cfg.ServerPort,

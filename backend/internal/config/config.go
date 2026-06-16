@@ -60,6 +60,7 @@ func Load() Config {
 	}
 }
 
+// Fallback berati return default value kalau key yang diget menghasilkan nil
 func getEnv(key, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok && value != "" {
 		return value

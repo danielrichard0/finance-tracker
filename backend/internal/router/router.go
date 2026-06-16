@@ -12,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func New(cfg config.Config, expenseHandler *handler.ExpenseHandler, sqlDB *sql.DB) *gin.Engine {
+func New(cfg config.Config, transactionHandler *handler.TransactionHandler, sqlDB *sql.DB) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger(), gin.Recovery())
 
@@ -36,12 +36,12 @@ func New(cfg config.Config, expenseHandler *handler.ExpenseHandler, sqlDB *sql.D
 
 	v1 := r.Group("/api/v1")
 	{
-		ex := v1.Group("/expenses")
-		ex.GET("/", expenseHandler.ListExpenses)
-		ex.POST("/", expenseHandler.CreateExpense)
-		ex.GET("/:id", expenseHandler.GetExpenseByID)
-		ex.PUT("/:id", expenseHandler.UpdateExpense)
-		ex.DELETE("/:id", expenseHandler.DeleteExpense)
+		tx := v1.Group("/transactions")
+		tx.GET("/", transactionHandler.ListTransactions)
+		tx.POST("/", transactionHandler.CreateTransaction)
+		tx.GET("/:id", transactionHandler.GetTransactionByID)
+		tx.PUT("/:id", transactionHandler.UpdateTransaction)
+		tx.DELETE("/:id", transactionHandler.DeleteTransaction)
 	}
 
 	return r
