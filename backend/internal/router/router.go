@@ -12,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func New(cfg config.Config, transactionHandler *handler.TransactionHandler, sqlDB *sql.DB) *gin.Engine {
+func New(cfg config.Config, transactionHandler *handler.TransactionHandler, userHandler *handler.UserHandler, sqlDB *sql.DB) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger(), gin.Recovery())
 
@@ -42,6 +42,15 @@ func New(cfg config.Config, transactionHandler *handler.TransactionHandler, sqlD
 		tx.GET("/:id", transactionHandler.GetTransactionByID)
 		tx.PUT("/:id", transactionHandler.UpdateTransaction)
 		tx.DELETE("/:id", transactionHandler.DeleteTransaction)
+	}
+
+	{
+		u := v1.Group("/users")
+		u.GET("/", userHandler.ListUsers)
+		u.POST("/", userHandler.CreateUser)
+		u.GET("/:id", userHandler.GetUserByID)
+		u.PUT("/:id", userHandler.UpdateUser)
+		u.DELETE("/:id", userHandler.DeleteUser)
 	}
 
 	return r

@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from discord import app_commands
 import aiohttp
 from enum import Enum
+from gsheets.main import ExpenseTrackerBaseClass
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -13,6 +14,7 @@ class MyClient(discord.Client):
     def __init__(self, *, intents, **options):
         super().__init__(intents=intents, **options)
         self.tree = app_commands.CommandTree(self)
+        self.BaseSheetClass = ExpenseTrackerBaseClass(sheetID='19bOnjPALH7TbSeyJr8N11KiIpCpMBxFBSxvtv6ViYss')
 
     async def on_ready(self):
         print(f'Logged on as {self.user}!')
@@ -40,6 +42,13 @@ intents.message_content = True
 
 client = MyClient(intents=intents)
 
+@client.tree.command(name="help", description="List all the commands that are available in this bot")
+async def help(interaction: discord.Interaction):
+    await interaction.response.send_message("""
+    /help - list all the commands that are available in this bot
+    /add_transaction - add transaction to your account                                            
+    """)
+
 @client.tree.command(name="hello", description='katakan hello')
 async def hello(interaction: discord.Interaction):
     await interaction.response.send_message('ini masuk')
@@ -47,7 +56,8 @@ async def hello(interaction: discord.Interaction):
 @client.tree.command(description='Tambah transaksi baru')    
 async def add_transaction(interaction: discord.Interaction,
                           title: str, amount: app_commands.Range[float, 0, None],
-                          category: Categories, notes: str, transaction_date: str, type: Types ):
+                          category: Categories, notes: str | None, transaction_date: str, type: Types ):
+    
     url='http://127.0.0.1:8080/api/v1/transactions'
     payload = {
         "title": title,
@@ -58,21 +68,34 @@ async def add_transaction(interaction: discord.Interaction,
         "type": type.value
     }
 
-    print('payload : ', interaction.user.id)
+    try :
+        async with aiohttp.ClientSession() as session:        
+            async with session.post(
+                url,
+                json=payload
+            ) as resp:
+                data = await resp.json()
+    except aiohttp.ClientConnectionError as e:
+        await interaction.response.send_message('Server did not response after awhile') 
+        return False               
 
-    async with aiohttp.ClientSession() as session:
-        async with session.post(
-            url,
-            json=payload
-        ) as resp:
-            data = await resp.json()
+    await interaction.response.send_message(f"Created transaction: {data}")
 
-    await interaction.response.send_message(
-        f"Created transaction: {data}")
+@client.tree.command(description='Tambah transaksi baru2')    
+async def add_transaction2(interaction: discord.Interaction,
+                          title: str, amount: app_commands.Range[float, 0, None],
+                          category: Categories, notes: str | None, transaction_date: str, type: Types ):
+    
+    payload = {
+        "title": title,
+        "amount" : amount,
+        "category": category.value, 
+        "notes": notes,
+        "transaction_date": transaction_date,
+        "type": type.value
+    }
 
-    # if resp.status_code==200:
-    #     interaction.response.send_message('berhasil simpan transaksi!')
-    # else:
-    #     interaction.response.send_message('gagal simpant transaksi')     
-
+    client.BaseSheetClass.testing()            
+    
+    await interaction.response.send_message(f"Created transaction:")
 client.run(TOKEN)

@@ -26,7 +26,11 @@ func main() {
 	transactionService := service.NewTransactionService(transactionRepo)
 	transactionHandler := handler.NewTransactionHandler(transactionService)
 
-	engine := router.New(cfg, transactionHandler, sqlDB)
+	userRepo := repository.NewUserRepository(sqlDB)
+	userService := service.NewUserService(userRepo)
+	userHandler := handler.NewUserHandler(userService)
+
+	engine := router.New(cfg, transactionHandler, userHandler, sqlDB)
 
 	srv := &http.Server{
 		Addr:         ":" + cfg.ServerPort,
